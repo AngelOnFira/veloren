@@ -1,0 +1,32 @@
+name: Mirror Gitlab repo
+
+on:
+  push:
+
+jobs:
+  deploy-core:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Install Git Filter Repo
+        run: git clone https://github.com/newren/git-filter-repo.git;
+          ./git-filter-repo/git-filter-repo --help
+
+      - name: Clone Gitlab repo
+        run: git lfs install;
+          git clone https://gitlab.com/veloren/veloren.git;
+          du -d 2;
+          cd veloren;
+          git lfs uninstall;
+          git lfs migrate export --include="*" --everything;
+          ../git-filter-repo/git-filter-repo --invert-paths --path .github --force;
+
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: master
+          force: true
+          tags: true
+          directory: veloren
